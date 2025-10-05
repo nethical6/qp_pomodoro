@@ -623,8 +623,17 @@ function completePhase() {
         playCompletionSound();
         showNotification("🎉 Focus session completed!");
 
-        if (isLongBreak) {
-            WebAppInterface.toast("Great job! You've completed " + settings.longBreakInterval + " sessions!");
+        if (isLongBreak && !isCycleComplete) {
+            // Trigger quest completion when starting long break
+            try {
+                if (typeof WebAppInterface !== "undefined" && WebAppInterface.onQuestCompleted) {
+                    WebAppInterface.onQuestCompleted();
+                    WebAppInterface.toast("Congratulations! You've completed all focus sessions! 🎉 Now enjoy your long break!");
+                }
+            } catch (e) {
+                console.log("Quest completion notification error:", e);
+            }
+            isCycleComplete = true;
         }
 
         currentPhase = isLongBreak ? "longBreak" : "shortBreak";
@@ -661,21 +670,7 @@ function completePhase() {
         const wasLongBreak = currentPhase === "longBreak";
 
         playCompletionSound();
-
-        if (wasLongBreak && completedPomodoros >= settings.longBreakInterval && !isCycleComplete) {
-            // Only complete the quest after finishing the long break that follows completing all focus sessions
-            try {
-                if (typeof WebAppInterface !== "undefined" && WebAppInterface.onQuestCompleted) {
-                    WebAppInterface.onQuestCompleted();
-                    WebAppInterface.toast("Congratulations! You've completed a full Pomodoro cycle! 🎉");
-                }
-            } catch (e) {
-                console.log("Quest completion notification error:", e);
-            }
-            isCycleComplete = true;
-        } else {
-            showNotification("✅ Break complete!");
-        }
+        showNotification("✅ Break complete!");
 
         // After cycle completion, reset to idle
         if (isCycleComplete) {

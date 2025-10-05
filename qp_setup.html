@@ -355,6 +355,95 @@
         .generate-btn.pulse {
             animation: pulse 2s infinite;
         }
+
+        .collapsible-btn {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: block;
+            width: 100%;
+            text-align: left;
+            transition: color 0.3s ease;
+        }
+
+        .collapsible-btn:hover {
+            color: #ee5a6f;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease-out;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 8px;
+            margin-top: 5px;
+            opacity: 0;
+        }
+
+        .collapsible-content.expanded {
+            max-height: 100px;
+            padding: 15px;
+            border-left: 3px solid #ff6b6b;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .time-container,
+            .number-input-group {
+                grid-template-columns: 1fr;
+            }
+
+            .days-container {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+
+            .day-button {
+                padding: 15px 8px;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .title {
+                font-size: 1.8rem;
+            }
+
+            .step-title {
+                font-size: 1.1rem;
+            }
+
+            .days-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 107, 107, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
+        }
+
+        .generate-btn.pulse {
+            animation: pulse 2s infinite;
+        }
     </style>
 </head>
 <body>
@@ -362,6 +451,23 @@
         <div class="header">
             <h1 class="title">🍅 Pomodoro Quest</h1>
             <p class="subtitle">Setup your Pomodoro timer quest</p>
+        </div>
+
+        <div class="step how-it-works">
+            <h2 class="step-title">
+                <span class="step-number">ℹ
+                    
+                </span>
+                How does it work?
+            </h2>
+            <div class="step-description" style="line-height: 1.6;">
+                <p>After completing your set intervals, your quest will be marked as complete and you'll earn coins that can be used to unlock apps! Note that during short breaks, you won't earn any coins - it's actually better to step away from your phone during breaks to stretch and refresh. We'll send you notifications when your short or long breaks are over. For optimal integration with QuestPhone, it's recommended to set your long break duration to match your ScreenTimeRewardRatio from QuestPhone.</p>
+                
+                <button class="collapsible-btn">What is ScreenTimeRewardRatio? ▼</button>
+                <div class="collapsible-content">
+                    ScreenTimeRewardRatio is the amount of screen time (in minutes) that each 5 coins gives you in QuestPhone.
+                </div>
+            </div>
         </div>
 
         <div class="step">
@@ -577,6 +683,20 @@
                 return v.toString(16);
             });
         }
+
+        // Set up collapsible functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const collapsibleBtns = document.querySelectorAll('.collapsible-btn');
+            collapsibleBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    content.classList.toggle('expanded');
+                    this.textContent = this.textContent.includes('▼') ? 
+                        'What is ScreenTimeRewardRatio? ▲' : 
+                        'What is ScreenTimeRewardRatio? ▼';
+                });
+            });
+        });
     </script>
 </body>
 </html>
