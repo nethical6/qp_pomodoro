@@ -400,7 +400,7 @@
     workDuration: 25,
     shortBreakDuration: 5,
     longBreakDuration: 15,
-    longBreakInterval: 4,
+    longBreakInterval: 1,
     autoStartBreaks: true,
     autoStartWork: false,
 };
@@ -476,7 +476,8 @@ function loadSettings() {
 }
 
 function loadStats() {
-    const stats = JSON.parse(localStorage.getItem("pomodoro_stats") || "{}");
+    const storageKey = settings.uniqueId ? `pomodoro_stats_${settings.uniqueId}` : "pomodoro_stats";
+    const stats = JSON.parse(localStorage.getItem(storageKey) || "{}");
     const today = new Date().toDateString();
 
     if (stats.lastDate !== today) {
@@ -518,7 +519,8 @@ function saveStats() {
         stats.sessionCount = (stats.sessionCount || 0) + 1;
     }
 
-    localStorage.setItem("pomodoro_stats", JSON.stringify(stats));
+    const storageKey = settings.uniqueId ? `pomodoro_stats_${settings.uniqueId}` : "pomodoro_stats";
+    localStorage.setItem(storageKey, JSON.stringify(stats));
     loadStats();
 }
 
@@ -552,7 +554,7 @@ function startTimer() {
     endTime = Date.now() + timeLeft * 1000;
 
     if (currentPhase !== "work") {
-        document.getElementById("phaseDisplay").textContent = "🌟 Feel free to use your phone and relax!";
+        document.getElementById("phaseDisplay").textContent = "🌟 Feel free to relax!";
     } else {
         document.getElementById("phaseDisplay").textContent = "⚡ Focus mode active - timer will pause if you leave";
     }
@@ -620,7 +622,10 @@ function completePhase() {
 
         playCompletionSound();
         showNotification("🎉 Focus session completed!");
-        playCompletionSound();
+
+        if (isLongBreak) {
+            WebAppInterface.toast("Great job! You've completed " + settings.longBreakInterval + " sessions!");
+        }
 
         currentPhase = isLongBreak ? "longBreak" : "shortBreak";
         timeLeft = isLongBreak
@@ -655,21 +660,20 @@ function completePhase() {
         // When a break finishes
         const wasLongBreak = currentPhase === "longBreak";
 
-        if (wasLongBreak && !isCycleComplete) {
-            // Full cycle completed (first long break)
+        playCompletionSound();
+
+        if (wasLongBreak && completedPomodoros >= settings.longBreakInterval && !isCycleComplete) {
+            // Only complete the quest after finishing the long break that follows completing all focus sessions
             try {
                 if (typeof WebAppInterface !== "undefined" && WebAppInterface.onQuestCompleted) {
                     WebAppInterface.onQuestCompleted();
-                    WebAppInterface.toast("Pomodoro cycle completed! Quest finished! 🎉");
-                    playCompletionSound();
+                    WebAppInterface.toast("Congratulations! You've completed a full Pomodoro cycle! 🎉");
                 }
             } catch (e) {
                 console.log("Quest completion notification error:", e);
             }
-
             isCycleComplete = true;
         } else {
-            playCompletionSound();
             showNotification("✅ Break complete!");
         }
 
@@ -679,7 +683,7 @@ function completePhase() {
             timeLeft = settings.workDuration * 60;
             document.getElementById("sessionType").textContent = "Cycle Complete";
             document.getElementById("phaseDisplay").textContent =
-                "🏁 Full cycle complete! You can start a new quest now.";
+                "🏁 Full cycle complete! You can start a new quest now. (You won't be rewarded in case you again do this)";
             document.getElementById("startBtn").textContent = "Restart Cycle";
         } else {
             // Normal short break flow

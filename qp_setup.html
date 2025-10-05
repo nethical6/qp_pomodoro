@@ -431,8 +431,8 @@
             </div>
             
             <div class="time-input" style="margin-top: 15px;">
-                <div class="time-label">Long Break After (sessions)</div>
-                <input type="number" class="input-field" id="longBreakInterval" min="2" max="10" value="4">
+                <div class="time-label">Long Break After (mark as complete after how many sessions)</div>
+                <input type="number" class="input-field" id="longBreakInterval" min="1" max="10" value="1">
             </div>
             
             <div class="time-input" style="margin-top: 15px;">
@@ -514,7 +514,7 @@
             const workDuration = parseInt(document.getElementById('workDuration').value) || 25;
             const shortBreakDuration = parseInt(document.getElementById('shortBreakDuration').value) || 5;
             const longBreakDuration = parseInt(document.getElementById('longBreakDuration').value) || 15;
-            const longBreakInterval = parseInt(document.getElementById('longBreakInterval').value) || 4;
+            const longBreakInterval = parseInt(document.getElementById('longBreakInterval').value) || 1;
             const autoStartBreaks = document.getElementById('autoStartBreaks').checked;
             const autoStartWork = document.getElementById('autoStartWork').checked;
 
