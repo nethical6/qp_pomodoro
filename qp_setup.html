@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Quest Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .step {
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeInStep 0.6s ease-out forwards;
+        }
+
+        .step:nth-child(2) { animation-delay: 0.1s; }
+        .step:nth-child(3) { animation-delay: 0.2s; }
+        .step:nth-child(4) { animation-delay: 0.3s; }
+        .step:nth-child(5) { animation-delay: 0.4s; }
+        .step:nth-child(6) { animation-delay: 0.5s; }
+
+        @keyframes fadeInStep {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2b2b2b;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-number {
+            background: #ff6b6b;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-right: 12px;
+        }
+
+        .step-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .time-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .time-input {
+            position: relative;
+        }
+
+        .time-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .days-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .day-button {
+            padding: 12px 8px;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            background: #fafafa;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .day-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .day-button.selected {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .generate-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .generate-btn:hover::before {
+            left: 100%;
+        }
+
+        .json-output {
+            display: none;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #ff6b6b;
+            margin-top: 20px;
+        }
+
+        .json-output.visible {
+            display: block;
+            animation: fadeInStep 0.6s ease-out;
+        }
+
+        .json-content {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .copy-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .copy-btn:hover {
+            background: #ee5a6f;
+            transform: translateY(-2px);
+        }
+
+        .copy-btn.copied {
+            background: #51cf66;
+        }
+
+        .number-input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #fafafa;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-wrapper:hover {
+            border-color: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .time-container,
+            .number-input-group {
+                grid-template-columns: 1fr;
+            }
+
+            .days-container {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+
+            .day-button {
+                padding: 15px 8px;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            .title {
+                font-size: 1.8rem;
+            }
+
+            .step-title {
+                font-size: 1.1rem;
+            }
+
+            .days-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 107, 107, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
+        }
+
+        .generate-btn.pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🍅 Pomodoro Quest</h1>
+            <p class="subtitle">Setup your Pomodoro timer quest</p>
+        </div>
+
+        <div class="step">
+            <h2 class="step-title">
+                <span class="step-number">1</span>
+                Quest Title
+            </h2>
+            <p class="step-description">Give your Pomodoro quest a name</p>
+            <input type="text" class="input-field" id="questTitle" placeholder="e.g., Focus Time" value="Pomodoro Session">
+        </div>
+
+        <div class="step">
+            <h2 class="step-title">
+                <span class="step-number">2</span>
+                Active Days
+            </h2>
+            <p class="step-description">Select which days this quest is active</p>
+            <div class="days-container">
+                <div class="day-button selected" data-day="MON">Mon</div>
+                <div class="day-button selected" data-day="TUE">Tue</div>
+                <div class="day-button selected" data-day="WED">Wed</div>
+                <div class="day-button selected" data-day="THU">Thu</div>
+                <div class="day-button selected" data-day="FRI">Fri</div>
+                <div class="day-button selected" data-day="SAT">Sat</div>
+                <div class="day-button selected" data-day="SUN">Sun</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h2 class="step-title">
+                <span class="step-number">3</span>
+                Time Range
+            </h2>
+            <p class="step-description">Set when this quest is available</p>
+            <div class="time-container">
+                <div class="time-input">
+                    <div class="time-label">Start Time</div>
+                    <input type="time" class="input-field" id="startTime" value="08:00">
+                </div>
+                <div class="time-input">
+                    <div class="time-label">End Time</div>
+                    <input type="time" class="input-field" id="endTime" value="22:00">
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h2 class="step-title">
+                <span class="step-number">4</span>
+                Timer Settings
+            </h2>
+            <p class="step-description">Configure your Pomodoro timer preferences</p>
+            
+            <div class="number-input-group">
+                <div class="time-input">
+                    <div class="time-label">Focus Duration (min)</div>
+                    <input type="number" class="input-field" id="workDuration" min="1" max="60" value="25">
+                </div>
+                <div class="time-input">
+                    <div class="time-label">Short Break (min)</div>
+                    <input type="number" class="input-field" id="shortBreakDuration" min="1" max="30" value="5">
+                </div>
+                <div class="time-input">
+                    <div class="time-label">Long Break (min)</div>
+                    <input type="number" class="input-field" id="longBreakDuration" min="1" max="60" value="15">
+                </div>
+            </div>
+            
+            <div class="time-input" style="margin-top: 15px;">
+                <div class="time-label">Long Break After (sessions)</div>
+                <input type="number" class="input-field" id="longBreakInterval" min="2" max="10" value="4">
+            </div>
+            
+            <div class="time-input" style="margin-top: 15px;">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="autoStartBreaks" checked>
+                    <span class="time-label" style="margin:0">Auto-start Breaks</span>
+                </label>
+            </div>
+            
+            <div class="time-input" style="margin-top: 15px;">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="autoStartWork">
+                    <span class="time-label" style="margin:0">Auto-start Focus Sessions</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="step">
+            <button class="generate-btn pulse" onclick="generateJSON()">
+                🚀 Generate Configuration
+            </button>
+        </div>
+
+        <div class="json-output" id="jsonOutput">
+            <h3 style="color: #2b2b2b; margin-bottom: 4px; font-size: 1.2rem;">📋 Your Quest Configuration</h3>
+            <h3 style="color: #2b2b2b; margin-bottom: 15px; font-size: 0.8rem;">Paste this into Add Custom Quest > External Integration > Quest Json field on questphone</h3>
+            <div class="json-content" id="jsonContent"></div>
+            <button class="copy-btn" onclick="copyJSON()">
+                📋 Copy JSON
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize selected days
+        const selectedDays = new Set(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']);
+
+        // Day selection functionality
+        const dayButtons = document.querySelectorAll('.day-button');
+        dayButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const day = button.dataset.day;
+                
+                if (selectedDays.has(day)) {
+                    selectedDays.delete(day);
+                    button.classList.remove('selected');
+                } else {
+                    selectedDays.add(day);
+                    button.classList.add('selected');
+                }
+                
+                button.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    button.style.transform = selectedDays.has(day) ? 'scale(1.05)' : 'scale(1)';
+                }, 150);
+            });
+        });
+
+        let generatedJSON = '';
+
+        function generateJSON() {
+            const questTitle = document.getElementById('questTitle').value || 'Pomodoro Session';
+            const reward = 5;
+            const startTimeStr = document.getElementById('startTime').value || '08:00';
+            const endTimeStr = document.getElementById('endTime').value || '22:00';
+            const startTime = parseInt(startTimeStr.split(':')[0]);
+            const endTime = parseInt(endTimeStr.split(':')[0]);
+            
+            if (selectedDays.size === 0) {
+                alert('Please select at least one day!');
+                return;
+            }
+
+            if (startTime >= endTime) {
+                alert('Start hour must be before end hour!');
+                return;
+            }
+
+            const workDuration = parseInt(document.getElementById('workDuration').value) || 25;
+            const shortBreakDuration = parseInt(document.getElementById('shortBreakDuration').value) || 5;
+            const longBreakDuration = parseInt(document.getElementById('longBreakDuration').value) || 15;
+            const longBreakInterval = parseInt(document.getElementById('longBreakInterval').value) || 4;
+            const autoStartBreaks = document.getElementById('autoStartBreaks').checked;
+            const autoStartWork = document.getElementById('autoStartWork').checked;
+
+            const now = new Date();
+            const questJson = {
+                webviewUrl: "http://localhost:3000",
+                uniqueId: generateUUID().toString(),
+                workDuration: workDuration.toString(),
+                shortBreakDuration: shortBreakDuration.toString(),
+                longBreakDuration: longBreakDuration.toString(),
+                longBreakInterval: longBreakInterval.toString(),
+                autoStartBreaks: autoStartBreaks.toString(),
+                autoStartWork: autoStartWork.toString()
+            };
+            const questConfig = {
+                title: questTitle,
+                reward: reward,
+                integration_id: "EXTERNAL_INTEGRATION",
+                selected_days: Array.from(selectedDays),
+                time_range: [startTime, endTime],
+                quest_json: JSON.stringify(questJson),
+            };
+
+            generatedJSON = JSON.stringify(questConfig, null, 2);
+            
+            document.getElementById('jsonContent').textContent = generatedJSON;
+            document.getElementById('jsonOutput').classList.add('visible');
+            
+            const generateBtn = document.querySelector('.generate-btn');
+            generateBtn.innerHTML = '✅ Generated!';
+            generateBtn.style.background = '#51cf66';
+            
+            setTimeout(() => {
+                generateBtn.innerHTML = '🚀 Generate Configuration';
+                generateBtn.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a6f)';
+            }, 2000);
+
+            document.getElementById('jsonOutput').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyJSON() {
+            navigator.clipboard.writeText(generatedJSON).then(() => {
+                const copyBtn = document.querySelector('.copy-btn');
+                copyBtn.innerHTML = '✅ Copied!';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = '📋 Copy JSON';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy: ' + err);
+            });
+        }
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+    </script>
+</body>
+</html>

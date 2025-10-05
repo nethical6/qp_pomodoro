@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pomodoro Timer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --color-primary: #6366f1;
+        --color-accent: #ec4899;
+        --color-text: #1f2937;
+        --color-text-secondary: #6b7280;
+        --color-background: #ffffff;
+        --color-success: #10b981;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: var(--color-background);
+        color: var(--color-text);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        overflow-x: hidden;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 500px;
+        position: relative;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 60px;
+      }
+
+      .title {
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--color-text-secondary);
+        letter-spacing: 0.5px;
+      }
+
+      .subtitle {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        opacity: 0.6;
+        margin-top: 8px;
+        font-weight: 400;
+        letter-spacing: 1px;
+      }
+
+      .timer-display {
+        position: relative;
+        margin: 0 auto 60px;
+        width: 320px;
+        height: 320px;
+      }
+
+      .circular-progress {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+      }
+
+      .progress-bg {
+        fill: none;
+        stroke: #f3f4f6;
+        stroke-width: 2;
+      }
+
+      .progress-bar {
+        fill: none;
+        stroke: var(--color-primary);
+        stroke-width: 2;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1s linear;
+      }
+
+      .timer-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      .time {
+        font-size: 72px;
+        font-weight: 300;
+        letter-spacing: -3px;
+        font-variant-numeric: tabular-nums;
+        color: var(--color-text);
+      }
+
+      .phase {
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        margin-top: 12px;
+        color: var(--color-text-secondary);
+        font-weight: 400;
+      }
+
+      .controls {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin: 0 0 60px;
+      }
+
+      .btn {
+        border: none;
+        padding: 14px 40px;
+        border-radius: 100px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        letter-spacing: 0.3px;
+      }
+
+      .btn-primary {
+        background: var(--color-primary);
+        color: white;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+      }
+
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: var(--color-text-secondary);
+        border: 1px solid #e5e7eb;
+      }
+
+      .btn-secondary:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+
+      .stats {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+        margin-top: 0;
+        padding-top: 40px;
+        border-top: 1px solid #f3f4f6;
+      }
+
+      .stat-item {
+        text-align: center;
+        transition: all 0.2s ease;
+      }
+
+      .stat-item:hover {
+        transform: translateY(-2px);
+      }
+
+      .stat-number {
+        font-size: 32px;
+        font-weight: 300;
+        display: block;
+        margin-bottom: 6px;
+        color: var(--color-text);
+      }
+
+      .stat-label {
+        font-size: 12px;
+        letter-spacing: 0.5px;
+        color: var(--color-text-secondary);
+        font-weight: 400;
+      }
+
+      .notification {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        background: var(--color-success);
+        color: white;
+        padding: 14px 20px;
+        border-radius: 100px;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+        transform: translateX(400px);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 2000;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+
+      #phaseDisplay {
+        margin-top: 24px;
+        font-size: 13px;
+        text-align: center;
+        color: var(--color-text-secondary);
+        font-weight: 400;
+        letter-spacing: 0.5px;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .pulse {
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 24px 16px;
+        }
+
+        .header {
+          margin-bottom: 48px;
+        }
+
+        .title {
+          font-size: 16px;
+        }
+
+        .subtitle {
+          font-size: 12px;
+        }
+
+        .timer-display {
+          width: 280px;
+          height: 280px;
+          margin: 0 auto 48px;
+        }
+
+        .circular-progress {
+          width: 280px;
+          height: 280px;
+        }
+
+        .time {
+          font-size: 64px;
+        }
+
+        .phase {
+          font-size: 12px;
+        }
+
+        .controls {
+          gap: 10px;
+          margin: 0 0 48px;
+        }
+
+        .btn {
+          padding: 12px 32px;
+          font-size: 14px;
+        }
+
+        .stats {
+          gap: 32px;
+          padding-top: 32px;
+        }
+
+        .stat-number {
+          font-size: 28px;
+        }
+
+        .stat-label {
+          font-size: 11px;
+        }
+
+        .notification {
+          top: 16px;
+          right: 16px;
+          left: 16px;
+          font-size: 13px;
+          padding: 12px 18px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .timer-display {
+          width: 240px;
+          height: 240px;
+        }
+
+        .circular-progress {
+          width: 240px;
+          height: 240px;
+        }
+
+        .time {
+          font-size: 56px;
+        }
+
+        .stat-number {
+          font-size: 24px;
+        }
+
+        .stats {
+          gap: 24px;
+        }
+      }
+
+      @media (hover: none) and (pointer: coarse) {
+        .btn:hover {
+          transform: none;
+        }
+
+        .btn:active {
+          transform: scale(0.98);
+        }
+
+        .stat-item:hover {
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="title">Pomodoro</div>
+        <div class="subtitle" id="sessionType">Focus Session</div>
+      </div>
+
+      <div class="timer-display">
+        <svg class="circular-progress" viewBox="0 0 320 320">
+          <circle class="progress-bg" cx="160" cy="160" r="155"></circle>
+          <circle
+            class="progress-bar"
+            cx="160"
+            cy="160"
+            r="155"
+            id="progressBar"
+          ></circle>
+        </svg>
+
+        <div class="timer-text">
+          <div class="time" id="timeDisplay">25:00</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-primary" id="startBtn">Start</button>
+        <button class="btn btn-secondary" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-number" id="pomodorosToday">0</span>
+          <span class="stat-label">Today</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="pomodorosTotal">0</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="currentStreak">0</span>
+          <span class="stat-label">Streak</span>
+        </div>
+      </div>
+
+      <div class="phase" id="phaseDisplay">Ready to begin</div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+    <audio id="completeSound" src="quest_complete.mp3" preload="auto"></audio>
+
+    <script>
+        const settings = {
+    uniqueId: "",
+    workDuration: 25,
+    shortBreakDuration: 5,
+    longBreakDuration: 15,
+    longBreakInterval: 4,
+    autoStartBreaks: true,
+    autoStartWork: false,
+};
+
+let timer = null;
+let timeLeft = 25 * 60;
+let isRunning = false;
+let currentPhase = "work";
+let completedPomodoros = 0;
+let endTime = null;
+let isCycleComplete = false;
+
+let TIMER_STORAGE_KEY = "pomodoro_timer_state";
+
+// SaveTimerState: Always store endTime
+function saveTimerState() {
+  TIMER_STORAGE_KEY = settings.uniqueId ? `pomodoro_timer_state_${settings.uniqueId}` : "pomodoro_timer_state";
+  const state = {
+    isRunning,
+    currentPhase,
+    timeLeft,
+    endTime,
+    completedPomodoros,
+    isCycleComplete,
+    pausedAt: !isRunning ? Date.now() : null
+  };
+  localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(state));
+}
+
+// LoadTimerState: Use endTime to resume
+function loadTimerState() {
+  const state = JSON.parse(localStorage.getItem(TIMER_STORAGE_KEY) || "{}");
+  if (!state.currentPhase) return false; // don't reset automatically
+
+  currentPhase = state.currentPhase;
+  isRunning = state.isRunning;
+  completedPomodoros = state.completedPomodoros || 0;
+  isCycleComplete = state.isCycleComplete || false;
+  endTime = state.endTime;
+
+  // If timer was running, recalculate timeLeft using endTime
+  if (isRunning && endTime) {
+    const now = Date.now();
+    timeLeft = Math.max(0, Math.floor((endTime - now) / 1000));
+    if (timeLeft <= 0) {
+      completePhase();
+      return false;
+    }
+  } else {
+    timeLeft = state.timeLeft || settings[currentPhase + "Duration"] * 60;
+  }
+  return true;
+}
+
+function clearTimerState() {
+    TIMER_STORAGE_KEY = settings.uniqueId ? `pomodoro_timer_state_${settings.uniqueId}` : "pomodoro_timer_state";
+    localStorage.removeItem(TIMER_STORAGE_KEY);
+}
+
+
+
+function loadSettings() {
+    if (!isRunning) {
+        timeLeft =
+            currentPhase === "work"
+                ? settings.workDuration * 60
+                : currentPhase === "shortBreak"
+                ? settings.shortBreakDuration * 60
+                : settings.longBreakDuration * 60;
+        endTime = null;
+        updateDisplay(true);
+    }
+}
+
+function loadStats() {
+    const stats = JSON.parse(localStorage.getItem("pomodoro_stats") || "{}");
+    const today = new Date().toDateString();
+
+    if (stats.lastDate !== today) {
+        stats.todayCount = 0;
+        stats.lastDate = today;
+    }
+
+    document.getElementById("pomodorosToday").textContent = stats.todayCount || 0;
+    document.getElementById("pomodorosTotal").textContent = stats.totalCount || 0;
+    document.getElementById("currentStreak").textContent = stats.streak || 0;
+
+    return stats;
+}
+
+function saveStats() {
+    const stats = loadStats();
+    const today = new Date().toDateString();
+
+    if (currentPhase === "work") {
+        stats.todayCount = (stats.todayCount || 0) + 1;
+        stats.totalCount = (stats.totalCount || 0) + 1;
+
+        if (stats.lastCompletedDate === today) {
+            // Already completed today, don't increment streak
+        } else {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
+
+            if (stats.lastCompletedDate === yesterdayStr) {
+                stats.streak = (stats.streak || 0) + 1;
+            } else {
+                stats.streak = 1;
+            }
+        }
+
+        stats.lastCompletedDate = today;
+        stats.lastDate = today;
+        stats.sessionCount = (stats.sessionCount || 0) + 1;
+    }
+
+    localStorage.setItem("pomodoro_stats", JSON.stringify(stats));
+    loadStats();
+}
+
+function toggleSettings() {
+    const panel = document.getElementById("settingsPanel");
+    panel.classList.toggle("active");
+}
+
+function showNotification(message) {
+    const notification = document.getElementById("notification");
+    notification.textContent = message;
+    notification.classList.add("show");
+
+    setTimeout(() => {
+        notification.classList.remove("show");
+    }, 3000);
+}
+
+function toggleTimer() {
+    if (isRunning) {
+        pauseTimer();
+    } else {
+        startTimer();
+    }
+}
+
+function startTimer() {
+    if (isRunning) return;
+    isRunning = true;
+
+    endTime = Date.now() + timeLeft * 1000;
+
+    if (currentPhase !== "work") {
+        document.getElementById("phaseDisplay").textContent = "🌟 Feel free to use your phone and relax!";
+    } else {
+        document.getElementById("phaseDisplay").textContent = "⚡ Focus mode active - timer will pause if you leave";
+    }
+
+    document.getElementById("startBtn").textContent = "Pause";
+    saveTimerState();
+
+    timer = setInterval(() => {
+        const remainingMs = endTime - Date.now();
+        timeLeft = Math.max(0, Math.floor(remainingMs / 1000));
+        
+        updateDisplay();
+        saveTimerState();
+
+        if (timeLeft <= 0) {
+            completePhase();
+        }
+    }, 1000);
+}
+
+function pauseTimer() {
+    if (!isRunning) return;
+    isRunning = false;
+    clearInterval(timer);
+    timer = null;
+
+    const remainingMs = endTime - Date.now();
+    timeLeft = Math.max(0, Math.floor(remainingMs / 1000));
+
+    document.getElementById("startBtn").textContent = "Resume";
+    document.getElementById("phaseDisplay").textContent = "Paused";
+    saveTimerState();
+}
+
+function resetTimer() {
+    clearInterval(timer);
+    timer = null;
+    isRunning = false;
+    currentPhase = "work";
+    timeLeft = settings.workDuration * 60;
+    endTime = null;
+    isCycleComplete = false;
+    document.getElementById("startBtn").textContent = "Start";
+    document.getElementById("sessionType").textContent = "Focus Time";
+    document.getElementById("phaseDisplay").textContent = "🎯 Ready to focus? Timer will pause if you leave";
+    updateDisplay(true);
+    clearTimerState();
+}
+
+function completePhase() {
+    clearInterval(timer);
+    timer = null;
+    isRunning = false;
+    endTime = null;
+    clearTimerState();
+
+    if (currentPhase === "work") {
+        completedPomodoros++;
+        saveStats();
+
+        const isLongBreak = completedPomodoros % settings.longBreakInterval === 0;
+        const nextBreakDuration = isLongBreak
+            ? settings.longBreakDuration * 60 * 1000
+            : settings.shortBreakDuration * 60 * 1000;
+
+        playCompletionSound();
+        showNotification("🎉 Focus session completed!");
+        playCompletionSound();
+
+        currentPhase = isLongBreak ? "longBreak" : "shortBreak";
+        timeLeft = isLongBreak
+            ? settings.longBreakDuration * 60
+            : settings.shortBreakDuration * 60;
+
+        document.getElementById("sessionType").textContent =
+            isLongBreak ? "Long Break" : "Short Break";
+        document.getElementById("phaseDisplay").textContent =
+            "🎉 Time to take a break and recharge!";
+
+        // Set alarm for break end time and auto start break
+        const breakDuration = isLongBreak ? settings.longBreakDuration : settings.shortBreakDuration;
+        const triggerMillis = Date.now() + (breakDuration * 60 * 1000);
+        const title = isLongBreak ? "Long Break Ending" : "Short Break Ending";
+        const description = "Time to get back to focus mode!";
+        
+        try {
+            if (typeof WebAppInterface !== "undefined" && WebAppInterface.setAlarmedNotification) {
+                WebAppInterface.setAlarmedNotification(triggerMillis, title, description);
+            }
+        } catch (e) {
+            console.log("Error setting break alarm:", e);
+        }
+
+        if (settings.autoStartBreaks) {
+            setTimeout(() => startTimer(), 2000);
+        } else {
+            document.getElementById("startBtn").textContent = "Start Break";
+        }
+    } else {
+        // When a break finishes
+        const wasLongBreak = currentPhase === "longBreak";
+
+        if (wasLongBreak && !isCycleComplete) {
+            // Full cycle completed (first long break)
+            try {
+                if (typeof WebAppInterface !== "undefined" && WebAppInterface.onQuestCompleted) {
+                    WebAppInterface.onQuestCompleted();
+                    WebAppInterface.toast("Pomodoro cycle completed! Quest finished! 🎉");
+                    playCompletionSound();
+                }
+            } catch (e) {
+                console.log("Quest completion notification error:", e);
+            }
+
+            isCycleComplete = true;
+        } else {
+            playCompletionSound();
+            showNotification("✅ Break complete!");
+        }
+
+        // After cycle completion, reset to idle
+        if (isCycleComplete) {
+            currentPhase = "work";
+            timeLeft = settings.workDuration * 60;
+            document.getElementById("sessionType").textContent = "Cycle Complete";
+            document.getElementById("phaseDisplay").textContent =
+                "🏁 Full cycle complete! You can start a new quest now.";
+            document.getElementById("startBtn").textContent = "Restart Cycle";
+        } else {
+            // Normal short break flow
+            currentPhase = "work";
+            timeLeft = settings.workDuration * 60;
+            document.getElementById("sessionType").textContent = "Focus Time";
+            document.getElementById("phaseDisplay").textContent =
+                "💪 Ready for another focused session?";
+
+            if (settings.autoStartWork) {
+                setTimeout(() => startTimer(), 2000);
+            } else {
+                document.getElementById("startBtn").textContent = "Start Focus";
+            }
+        }
+    }
+
+    updateDisplay(true);
+    saveTimerState();
+}
+
+function updateDisplay(noTransition = false) {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const timeString = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    document.getElementById("timeDisplay").textContent = timeString;
+
+
+    const totalTime =
+        currentPhase === "work"
+            ? settings.workDuration * 60
+            : currentPhase === "shortBreak"
+            ? settings.shortBreakDuration * 60
+            : settings.longBreakDuration * 60;
+    const progress = totalTime > 0 ? 1 - timeLeft / totalTime : 0;
+    const circumference = 2 * Math.PI * 125;
+    const offset = circumference * (1 - progress);
+
+    const progressBar = document.getElementById("progressBar");
+    progressBar.setAttribute("stroke-dasharray", `${circumference} ${circumference}`);
+    if (noTransition) {
+        progressBar.style.transition = "none";
+        progressBar.setAttribute("stroke-dashoffset", offset);
+        void progressBar.offsetWidth;
+        progressBar.style.transition = "stroke-dashoffset 1s linear";
+    } else {
+        progressBar.setAttribute("stroke-dashoffset", offset);
+    }
+
+    document.title = `${timeString} - Pomodoro`;
+}
+
+function applyTheme(theme) {
+    const root = document.documentElement;
+    const elements = document.querySelectorAll(".theme-transition, .card, .settings-content");
+
+    elements.forEach((el) => {
+        if (el) el.classList.add("theme-transition");
+    });
+
+    root.style.setProperty("--color-primary", theme.primary || "#ff6b6b");
+    root.style.setProperty("--color-on-primary", theme.onPrimary || "#ffffff");
+    root.style.setProperty("--color-secondary", theme.secondary || "#4ecdc4");
+    root.style.setProperty("--color-on-secondary", theme.onSecondary || "#ffffff");
+    root.style.setProperty("--color-background", theme.background || "#1a1a2e");
+    root.style.setProperty("--color-on-background", theme.onBackground || "#ffffff");
+    root.style.setProperty("--color-surface", theme.surface || "#16213e");
+    root.style.setProperty("--color-on-surface", theme.onSurface || "#ffffff");
+
+    setTimeout(() => {
+        elements.forEach((el) => {
+            if (el) el.classList.remove("theme-transition");
+        });
+    }, 300);
+}
+
+function injectData(data) {
+    try {
+        let parsed;
+        if (typeof data === "object") {
+            parsed = data;
+        } else if (typeof data === "string") {
+            parsed = JSON.parse(data);
+            if (typeof parsed === "string") {
+                parsed = JSON.parse(parsed);
+            }
+        } else {
+            throw new Error("Invalid data format");
+        }
+
+        let incomingSettings = null;
+        if (parsed.settings) {
+            incomingSettings = parsed.settings;
+        } else if (
+            parsed.workDuration !== undefined ||
+            parsed.shortBreakDuration !== undefined ||
+            parsed.longBreakDuration !== undefined ||
+            parsed.longBreakInterval !== undefined ||
+            parsed.autoStartBreaks !== undefined ||
+            parsed.autoStartWork !== undefined ||
+            parsed.uniqueId !== undefined
+        ) {
+            incomingSettings = {
+                workDuration: parsed.workDuration,
+                shortBreakDuration: parsed.shortBreakDuration,
+                longBreakDuration: parsed.longBreakDuration,
+                longBreakInterval: parsed.longBreakInterval,
+                autoStartBreaks: parsed.autoStartBreaks,
+                autoStartWork: parsed.autoStartWork,
+                uniqueId: parsed.uniqueId,
+            };
+        }
+
+        if (parsed.theme) {
+            applyTheme(parsed.theme);
+        }
+
+        if (incomingSettings) {
+            const oldUniqueId = settings.uniqueId;
+            Object.assign(settings, incomingSettings);
+            
+            if (settings.uniqueId !== oldUniqueId) {
+                const oldStorageKey = oldUniqueId ? `pomodoro_timer_state_${oldUniqueId}` : "pomodoro_timer_state";
+                const oldState = localStorage.getItem(oldStorageKey);
+                
+                if (oldState) {
+                    localStorage.removeItem(oldStorageKey);
+                }
+                setUniqueId(settings.uniqueId);
+            }
+            
+            // loadTimerState();
+            // loadSettings();
+        }
+    } catch (err) {
+        console.error("Error injecting data:", err);
+    }
+}
+
+function setUniqueId(id) {
+    settings.uniqueId = id;
+    TIMER_STORAGE_KEY = `pomodoro_timer_state_${id}`;
+    SETTINGS_STORAGE_KEY = `pomodoro_settings_${id}`;
+    STATS_STORAGE_KEY = `pomodoro_stats_${id}`;
+
+    console.log("Unique ID set:", id);
+
+    loadSettings();
+    loadStats();
+
+    const loaded = loadTimerState();
+    updateDisplay(true);
+
+    if (loaded && isRunning) {
+        console.log("Resuming timer from saved state");
+        startTimer();
+    }
+
+    document.getElementById("startBtn").addEventListener("click", toggleTimer);
+    document.getElementById("resetBtn").addEventListener("click", resetTimer);
+}
+
+function playCompletionSound() {
+    try {
+        const sound = document.getElementById('completeSound');
+        if (sound) {
+            sound.currentTime = 0; // Reset to start
+            sound.play().catch(e => console.log('Error playing sound:', e));
+        }
+    } catch (e) {
+        console.log('Error with sound playback:', e);
+    }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    if (loadTimerState()) {
+      if (isRunning || currentPhase !== "work") {
+        startTimer(); // Resume timer if it was running, including break mode
+      } else {
+        updateDisplay(true); // Paused, don't resume automatically in focus
+      }
+    } else {
+      updateDisplay(true);
+    }
+  } else if (isRunning && currentPhase === "work") {
+    pauseTimer(); // Pause focus timer when leaving page
+  }
+});
+
+window.onload = function () {
+    WebAppInterface.enableFullScreen();
+};
+    </script>
+  </body>
+</html>
