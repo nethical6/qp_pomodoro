@@ -625,8 +625,14 @@
             const autoStartWork = document.getElementById('autoStartWork').checked;
 
             const now = new Date();
-            const questJson = {
-                webviewUrl: "https://nethical6.github.io/qp_pomodoro/",
+            const questJson = {webviewUrl:
+            location.origin +
+            (location.pathname.endsWith("qp_setup.html")
+              ? location.pathname.replace("qp_setup.html", "index.html")
+              : location.pathname.endsWith("/")
+              ? location.pathname + "index.html"
+              : location.pathname + "/index.html"), 
+
                 uniqueId: generateUUID().toString(),
                 workDuration: workDuration.toString(),
                 shortBreakDuration: shortBreakDuration.toString(),
